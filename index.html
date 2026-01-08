@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ar" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOOLY'S MEMORIES</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&amp;family=Righteous&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font-family: 'Tajawal', sans-serif;
+    }
+    
+    .title-font {
+      font-family: 'Righteous', cursive;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    
+    .animated-bg {
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe, #00f2fe, #43e97b);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+    
+    .floating {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .memory-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .memory-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .shimmer {
+      background: linear-gradient(90deg, 
+        #FFF5E1 0%, 
+        #FFFACD 25%, 
+        #FFF5E1 50%, 
+        #FFFACD 75%, 
+        #FFF5E1 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full overflow-auto">
+  <div id="app" class="w-full min-h-full animated-bg relative overflow-hidden"><!-- Floating Bubbles -->
+   <div class="bubble" style="width: 80px; height: 80px; top: 10%; left: 10%; animation-delay: 0s;"></div>
+   <div class="bubble" style="width: 60px; height: 60px; top: 60%; left: 80%; animation-delay: 2s;"></div>
+   <div class="bubble" style="width: 100px; height: 100px; top: 80%; left: 20%; animation-delay: 4s;"></div>
+   <div class="bubble" style="width: 70px; height: 70px; top: 30%; left: 70%; animation-delay: 1s;"></div>
+   <div class="relative z-10 w-full min-h-full p-6"><!-- Admin View -->
+    <div id="adminView" class="max-w-6xl mx-auto">
+     <div class="text-center mb-12 floating">
+      <h1 id="pageTitle" class="title-font text-6xl font-bold mb-4 shimmer">DOOLY'S MEMORIES</h1>
+      <p class="text-white text-2xl mb-8">💝 ذكريات جميلة من أصدقائك 💝</p>
+     </div><!-- Share Link Section -->
+     <div class="memory-card rounded-3xl p-8 mb-8 shadow-2xl">
+      <h2 id="shareTitle" class="text-3xl font-bold text-center mb-6" style="color: #C44569;">شارك رابط الذكريات</h2>
+      <div class="flex gap-4 items-center"><input type="text" id="shareLink" readonly class="flex-1 px-6 py-4 rounded-2xl border-2 border-pink-300 text-lg" value="انقر على 'نسخ الرابط' لمشاركته مع أصدقائك"> <button id="copyLinkBtn" class="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105 shadow-lg" style="background: linear-gradient(135deg, #FF6B9D, #C44569);"> 📋 نسخ الرابط </button>
+      </div>
+     </div><!-- Memories Display -->
+     <div id="memoriesContainer" class="space-y-6"><!-- Memories will be inserted here -->
+     </div>
+     <div id="noMemories" class="memory-card rounded-3xl p-12 text-center shadow-2xl">
+      <p class="text-2xl text-gray-600">🌟 لا توجد ذكريات بعد... شارك الرابط مع أصدقائك! 🌟</p>
+     </div>
+    </div><!-- User Submit View -->
+    <div id="userView" class="hidden max-w-2xl mx-auto">
+     <div class="text-center mb-12 floating">
+      <h1 id="userPageTitle" class="title-font text-6xl font-bold mb-4 shimmer">DOOLY'S MEMORIES</h1>
+      <p id="welcomeMessage" class="text-white text-2xl mb-4">شارك ذكرى جميلة معي...</p>
+      <p class="text-white text-xl">✨ رسالتك ستبقى مجهولة ✨</p>
+     </div>
+     <div class="memory-card rounded-3xl p-10 shadow-2xl">
+      <form id="memoryForm" class="space-y-6">
+       <div><label for="messageInput" class="block text-xl font-bold mb-3" style="color: #C44569;">اكتب ذكراك هنا 💭</label> <textarea id="messageInput" rows="6" class="w-full px-6 py-4 rounded-2xl border-2 border-pink-300 text-lg resize-none focus:border-pink-500 focus:outline-none transition-all" placeholder="شارك ذكرى جميلة، لحظة مميزة، أو كلمة من القلب..." required></textarea>
+       </div><button type="submit" id="submitBtn" class="w-full py-5 rounded-2xl text-white font-bold text-2xl transition-all hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" style="background: linear-gradient(135deg, #FF6B9D, #C44569);"> <span id="submitBtnText">💌 أرسل ذكرى</span> </button>
+      </form>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      page_title: "DOOLY'S MEMORIES",
+      welcome_message: "شارك ذكرى جميلة معي...",
+      submit_button_text: "أرسل ذكرى",
+      share_title: "شارك رابط الذكريات",
+      background_color: "#FF6B9D",
+      card_color: "#FFFFFF",
+      text_color: "#C44569",
+      button_color: "#FF6B9D",
+      title_color: "#FFF5E1"
+    };
+    
+    let memories = [];
+    let isLoading = false;
+    
+    // Check if we're in user mode (has ?submit parameter)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isUserMode = urlParams.has('submit');
+    
+    // Show appropriate view
+    if (isUserMode) {
+      document.getElementById('adminView').classList.add('hidden');
+      document.getElementById('userView').classList.remove('hidden');
+    }
+    
+    // Generate shareable link
+    const currentUrl = window.location.href.split('?')[0];
+    const shareableLink = currentUrl + '?submit=true';
+    document.getElementById('shareLink').value = shareableLink;
+    
+    // Copy link functionality
+    document.getElementById('copyLinkBtn').addEventListener('click', () => {
+      const linkInput = document.getElementById('shareLink');
+      linkInput.select();
+      linkInput.setSelectionRange(0, 99999);
+      
+      navigator.clipboard.writeText(shareableLink).then(() => {
+        showToast('تم نسخ الرابط! 🎉', 'success');
+      }).catch(() => {
+        showToast('فشل نسخ الرابط', 'error');
+      });
+    });
+    
+    // Form submission
+    document.getElementById('memoryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (isLoading) return;
+      
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value.trim();
+      
+      if (!message) {
+        showToast('الرجاء كتابة رسالة', 'error');
+        return;
+      }
+      
+      if (memories.length >= 999) {
+        showToast('تم الوصول للحد الأقصى من الذكريات (999)', 'error');
+        return;
+      }
+      
+      isLoading = true;
+      const submitBtn = document.getElementById('submitBtn');
+      const submitBtnText = document.getElementById('submitBtnText');
+      submitBtn.disabled = true;
+      submitBtnText.textContent = '⏳ جاري الإرسال...';
+      
+      const newMemory = {
+        id: Date.now().toString(),
+        message: message,
+        timestamp: new Date().toISOString()
+      };
+      
+      const result = await window.dataSdk.create(newMemory);
+      
+      if (result.isOk) {
+        messageInput.value = '';
+        showToast('تم إرسال ذكراك بنجاح! 💖', 'success');
+        submitBtnText.textContent = '✅ تم الإرسال!';
+        
+        setTimeout(() => {
+          submitBtnText.textContent = window.elementSdk.config.submit_button_text || defaultConfig.submit_button_text;
+          submitBtn.disabled = false;
+          isLoading = false;
+        }, 2000);
+      } else {
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+        submitBtnText.textContent = window.elementSdk.config.submit_button_text || defaultConfig.submit_button_text;
+        submitBtn.disabled = false;
+        isLoading = false;
+      }
+    });
+    
+    function renderMemories(data) {
+      const container = document.getElementById('memoriesContainer');
+      const noMemories = document.getElementById('noMemories');
+      
+      if (data.length === 0) {
+        container.innerHTML = '';
+        noMemories.classList.remove('hidden');
+        return;
+      }
+      
+      noMemories.classList.add('hidden');
+      
+      const sortedMemories = [...data].sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+      
+      container.innerHTML = sortedMemories.map(memory => {
+        const date = new Date(memory.timestamp);
+        const formattedDate = date.toLocaleDateString('ar-EG', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        return `
+          <div class="memory-card rounded-3xl p-8 shadow-2xl">
+            <div class="flex justify-between items-start mb-4">
+              <span class="text-3xl">💭</span>
+              <span class="text-gray-500 text-sm">${formattedDate}</span>
+            </div>
+            <p class="text-gray-800 text-xl leading-relaxed whitespace-pre-wrap">${escapeHtml(memory.message)}</p>
+            <div class="mt-6 pt-4 border-t border-pink-200 text-center">
+              <span class="text-pink-400 text-sm">✨ من صديق مجهول ✨</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      
+      const bgColor = type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6';
+      toast.style.background = bgColor;
+      toast.style.color = 'white';
+      toast.innerHTML = `<strong>${message}</strong>`;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+    
+    async function onConfigChange(config) {
+      document.getElementById('pageTitle').textContent = config.page_title || defaultConfig.page_title;
+      document.getElementById('userPageTitle').textContent = config.page_title || defaultConfig.page_title;
+      document.getElementById('welcomeMessage').textContent = config.welcome_message || defaultConfig.welcome_message;
+      document.getElementById('submitBtnText').textContent = config.submit_button_text || defaultConfig.submit_button_text;
+      document.getElementById('shareTitle').textContent = config.share_title || defaultConfig.share_title;
+      
+      const pageTitles = document.querySelectorAll('#pageTitle, #userPageTitle');
+      pageTitles.forEach(el => {
+        el.style.background = `linear-gradient(90deg, ${config.title_color || defaultConfig.title_color} 0%, #FFFACD 25%, ${config.title_color || defaultConfig.title_color} 50%, #FFFACD 75%, ${config.title_color || defaultConfig.title_color} 100%)`;
+        el.style.backgroundSize = '200% 100%';
+        el.style.webkitBackgroundClip = 'text';
+        el.style.backgroundClip = 'text';
+        el.style.webkitTextFillColor = 'transparent';
+      });
+      
+      document.getElementById('shareTitle').style.color = config.text_color || defaultConfig.text_color;
+      
+      const buttons = document.querySelectorAll('#copyLinkBtn, #submitBtn');
+      buttons.forEach(btn => {
+        btn.style.background = `linear-gradient(135deg, ${config.button_color || defaultConfig.button_color}, ${config.text_color || defaultConfig.text_color})`;
+      });
+    }
+    
+    const dataHandler = {
+      onDataChanged(data) {
+        memories = data;
+        if (!isUserMode) {
+          renderMemories(data);
+        }
+      }
+    };
+    
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange,
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.card_color || defaultConfig.card_color,
+            set: (value) => {
+              config.card_color = value;
+              window.elementSdk.setConfig({ card_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.button_color || defaultConfig.button_color,
+            set: (value) => {
+              config.button_color = value;
+              window.elementSdk.setConfig({ button_color: value });
+            }
+          },
+          {
+            get: () => config.title_color || defaultConfig.title_color,
+            set: (value) => {
+              config.title_color = value;
+              window.elementSdk.setConfig({ title_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['page_title', config.page_title || defaultConfig.page_title],
+        ['welcome_message', config.welcome_message || defaultConfig.welcome_message],
+        ['submit_button_text', config.submit_button_text || defaultConfig.submit_button_text],
+        ['share_title', config.share_title || defaultConfig.share_title]
+      ])
+    });
+    
+    window.dataSdk.init(dataHandler);
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bab70c0e0d7d821',t:'MTc2Nzg3MjY0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
